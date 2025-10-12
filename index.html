@@ -42,23 +42,21 @@
         }
 
         .prayer-schedule-container {
-            background-color: #ff9900;
-            /* Orange background */
+            background-color:  #2d3748;
             color: white;
-            padding: 25px;
+            padding: 15px; /* Reduced padding */
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            text-align: left;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
             margin-top: 20px;
+            text-align: left;
         }
 
         .prayer-schedule-container .header {
-            margin-bottom: 25px;
+            margin-bottom: 15px; /* Reduced margin */
         }
 
         .prayer-schedule-container .date-location {
-            font-size: 1.2em;
-            opacity: 0.9;
+            font-size: 1em; /* Smaller font */
         }
 
         .prayer-times {
@@ -69,18 +67,67 @@
 
         .prayer-time-item {
             text-align: center;
-            padding: 0 10px;
+            padding: 0 5px; /* Reduced padding */
         }
 
         .prayer-name {
-            font-size: 1.4em;
-            margin-bottom: 5px;
+            font-size: 1.1em; /* Smaller font */
+            margin-bottom: 3px;
         }
 
         .time {
-            font-size: 2em;
+            font-size: 1.6em; /* Smaller font */
             font-weight: bold;
         }
+
+        @media (max-width: 500px) {
+                .prayer-times {
+                flex-wrap: wrap;
+                justify-content: space-around; 
+            }
+                .prayer-time-item {
+                flex-basis: 30%; 
+                margin-bottom: 15px; 
+            }   
+                .prayer-name {
+                font-size: 1em;
+            }
+                .time {
+                font-size: 1.3em;
+            }
+        }
+        .digital-clock-container {
+            background-color:  #2d3748; /* Orange background */
+            color: white;
+            font-family: 'Courier New', Courier, monospace; /* Classic digital font */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            font-size: 2.5em; /* Controls the overall size */
+            font-weight: bold;
+            text-align: center;
+            
+            margin: 20px auto; /* Center the clock */
+        }
+
+        .clock-separator {
+            /* Animation for the blinking effect */
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 500px) {
+                .digital-clock-container {
+                font-size: 2em;
+                padding: 15px;
+            }
+        }
+
     </style>
 </head>
 
@@ -113,6 +160,36 @@
             </header>
 
             <hr class="text-white-50 my-5">
+            
+            <div class="container-fluid">
+                <h1 class="h2 mb-4 fw-bold">Time:</h1>
+                <div class="digital-clock-container">
+                    <span id="clock-hours">00</span>
+                    <span class="clock-separator">:</span>
+                    <span id="clock-minutes">00</span>
+                    <span class="clock-separator">:</span>
+                    <span id="clock-seconds">00</span>
+                </div>
+                <script>
+                    function updateClock() {            
+                        const now = new Date();
+                        let hours = now.getHours();
+                        let minutes = now.getMinutes();
+                        let seconds = now.getSeconds();
+                        hours = hours < 10 ? '0' + hours : hours;
+                        minutes = minutes < 10 ? '0' + minutes : minutes;
+                        seconds = seconds < 10 ? '0' + seconds : seconds;
+                        document.getElementById('clock-hours').textContent = hours;
+                        document.getElementById('clock-minutes').textContent = minutes;
+                        document.getElementById('clock-seconds').textContent = seconds;
+                    }
+                    setInterval(updateClock, 1000);
+                    updateClock(); 
+            </script>
+            </div>
+            
+            <hr class="text-white-50 my-5">
+
             <div class="container-fluid">
                 <h1 class="h2 mb-4 fw-bold">Prayer Time:</h1>
                 <script type="text/javascript" src="PrayerTime.js"></script>
@@ -164,8 +241,10 @@
                         document.getElementById('isha-time').textContent = times.isha;
                     });
                 </script>
+                <br>
                 <p>* Might not accurated just reminder</p>
             </div>
+
             <hr class="text-white-50 my-5">
 
             <div class="container-fluid">
