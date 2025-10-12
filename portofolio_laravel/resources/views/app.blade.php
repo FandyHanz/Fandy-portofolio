@@ -66,7 +66,7 @@
                 <div class="mt-4">
                     <p class="mt-4 col-lg-8 mx-auto">Wanna see my Curiculum Vitae</p>
                     <div class="mt-3">
-                        <a href="https://drive.google.com/file/d/12LvOILjwFFPjkLztB-c-EE7PCaHedTAq/view?usp=drive_link"><span
+                        <a href="images/cv.jpg"><span
                                 class="badge badge-custom fs-5">Click Here !</span></a>
                     </div>
                 </div>
