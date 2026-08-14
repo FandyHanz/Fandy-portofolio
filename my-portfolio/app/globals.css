@@ -1,0 +1,113 @@
+html, body {
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 2rem;
+  width: 100%;
+}
+
+.project-card {
+  background-color: #2d3748 !important;
+  border: 1px solid #4a5568 !important;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.badge-custom {
+  background-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+.prayer-schedule-container {
+  background-color: #2d3748 !important;
+  color: white !important;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  margin-top: 20px;
+  text-align: left;
+}
+
+.prayer-schedule-container .header {
+  margin-bottom: 15px;
+}
+
+.prayer-schedule-container .date-location {
+  font-size: 1em;
+}
+
+.prayer-times {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prayer-time-item {
+  text-align: center;
+  padding: 0 5px;
+}
+
+.prayer-name {
+  font-size: 1.1em;
+  margin-bottom: 3px;
+}
+
+.time {
+  font-size: 1.6em;
+  font-weight: bold;
+}
+
+.digital-clock-container {
+  background-color: #2d3748 !important;
+  color: white !important;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  font-size: 2.5em;
+  font-weight: bold;
+  text-align: center;
+  margin: 20px auto;
+}
+
+.clock-separator {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .prayer-times {
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  .prayer-time-item {
+    flex-basis: 30%;
+    margin-bottom: 15px;
+  }
+
+  .prayer-name {
+    font-size: 1em;
+  }
+
+  .time {
+    font-size: 1.3em;
+  }
+
+  .digital-clock-container {
+    font-size: 2em;
+    padding: 15px;
+  }
+}
