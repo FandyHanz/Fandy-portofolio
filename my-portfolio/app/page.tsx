@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import AdminNavbarModals from "@/app/components/AdminNavbarModals";
-import DeleteProjectBtn from "@/app/components/DeleteProjectBtn";
+import ProjectCardActions from "@/app/components/ProjectCardActions";
 import PrayerAndClock from "@/app/components/PrayerAndClock";
 
 export const revalidate = 0;
@@ -12,17 +12,16 @@ export default async function Home() {
 
   // 1. Tarik Data Profile
   const [profileRows]: any = await db.query("SELECT * FROM profile WHERE id = 1 LIMIT 1");
-  const profile = profileRows[0] || {
-    name: "Fandy Wahyu Hanzura",
-    role_title: "Junior Full Stack Developer",
-    bio: "Im an Junior Full Stack developer and Data scientist enthusiast now currently studying in State Polytechnic of Malang in Computer Science and computer engginering field",
-    email: "hanzyura28@gmail.com",
-    github_url: "https://github.com/FandyHanz",
-    linkedin_url: "https://www.linkedin.com/in/fandy-wahyu-hanzura-0b4171369/",
-    profile_img: "/profile.jpg",
-    cv_file: "/cv.jpg",
+  const profile = {
+    name: profileRows[0]?.name || "Fandy Wahyu Hanzura",
+    role_title: profileRows[0]?.role_title || "Junior Full Stack Developer",
+    bio: profileRows[0]?.bio || "Im an Junior Full Stack developer...",
+    email: profileRows[0]?.email || "hanzyura28@gmail.com",
+    github_url: profileRows[0]?.github_url || "https://github.com/FandyHanz",
+    linkedin_url: profileRows[0]?.linkedin_url || "https://www.linkedin.com/in/fandy-wahyu-hanzura-0b4171369/",
+    profile_img: profileRows[0]?.profile_img || "/profile.jpg",
+    cv_file: profileRows[0]?.cv_file || "/cv.jpg",
   };
-
   // 2. Tarik Data Projects
   const [projects]: any = await db.query(
     "SELECT * FROM projects ORDER BY created_at DESC"
@@ -91,10 +90,12 @@ export default async function Home() {
               return (
                 <div key={proj.id} className="col-lg-4 col-md-6 mb-4">
                   <div className="card project-card text-white h-100 position-relative">
-                    {isAdmin && <DeleteProjectBtn id={proj.id} />}
+                    {/* Menu Titik Tiga (Edit & Hapus) */}
+                    {isAdmin && <ProjectCardActions project={proj} />}
 
                     <div className="card-body">
-                      <h5 className="card-title fw-bold">{proj.title}</h5>
+                      {/* pe-5 biar judul gak tabrakan sama menu titik tiga */}
+                      <h5 className="card-title fw-bold pe-5">{proj.title}</h5>
                       <p className="card-text small text-white-50 mt-2">
                         {proj.description}
                       </p>
