@@ -1,8 +1,8 @@
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
-import Script from "next/script";
-import AdminNavbarModals from "./components/AdminNavbarModals";
-import DeleteProjectBtn from "./components/DeleteProjectBtn";
+import AdminNavbarModals from "@/app/components/AdminNavbarModals";
+import DeleteProjectBtn from "@/app/components/DeleteProjectBtn";
+import PrayerAndClock from "@/app/components/PrayerAndClock";
 
 export const revalidate = 0;
 
@@ -10,6 +10,20 @@ export default async function Home() {
   const cookieStore = await cookies();
   const isAdmin = cookieStore.get("admin_session")?.value === process.env.ADMIN_SECRET_KEY;
 
+  // 1. Tarik Data Profile
+  const [profileRows]: any = await db.query("SELECT * FROM profile WHERE id = 1 LIMIT 1");
+  const profile = profileRows[0] || {
+    name: "Fandy Wahyu Hanzura",
+    role_title: "Junior Full Stack Developer",
+    bio: "Im an Junior Full Stack developer and Data scientist enthusiast now currently studying in State Polytechnic of Malang in Computer Science and computer engginering field",
+    email: "hanzyura28@gmail.com",
+    github_url: "https://github.com/FandyHanz",
+    linkedin_url: "https://www.linkedin.com/in/fandy-wahyu-hanzura-0b4171369/",
+    profile_img: "/profile.jpg",
+    cv_file: "/cv.jpg",
+  };
+
+  // 2. Tarik Data Projects
   const [projects]: any = await db.query(
     "SELECT * FROM projects ORDER BY created_at DESC"
   );
@@ -24,38 +38,35 @@ export default async function Home() {
     <main className="main-content">
       <div className="container">
         {/* NAV BUTTONS & MODALS */}
-        <AdminNavbarModals isAdmin={isAdmin} />
+        <AdminNavbarModals isAdmin={isAdmin} profileData={profile} />
 
-        {/* HEADER SECTION */}
+        {/* DYNAMIC HEADER / ABOUT SECTION */}
         <header className="text-center py-5">
           <img
-            src="/profile.jpg"
-            alt="Profile"
+            src={profile.profile_img}
+            alt={profile.name}
             className="img-fluid rounded-circle"
             style={{ width: "300px", height: "300px", objectFit: "cover" }}
           />
-          <h1 className="display-4 fw-bold mt-3">Fandy Wahyu Hanzura</h1>
-          <p className="lead text-white-50">Junior Full Stack Developer</p>
-          <p className="mt-4 col-lg-8 mx-auto">
-            Im an Junior Full Stack developer and Data scientist enthusiast now currently studying in State
-            Polytechnic of Malang in Computer Science and computer engginering field
-          </p>
+          <h1 className="display-4 fw-bold mt-3">{profile.name}</h1>
+          <p className="lead text-white-50">{profile.role_title}</p>
+          <p className="mt-4 col-lg-8 mx-auto">{profile.bio}</p>
           <div className="mt-4">
-            <a href="mailto:hanzyura28@gmail.com" className="text-white-50 text-decoration-none me-3 fs-3">
+            <a href={`mailto:${profile.email}`} className="text-white-50 text-decoration-none me-3 fs-3" title="Email">
               <i className="fas fa-envelope"></i>
             </a>
-            <a href="https://github.com/FandyHanz" target="_blank" className="text-white-50 text-decoration-none me-3 fs-3">
+            <a href={profile.github_url} target="_blank" rel="noreferrer" className="text-white-50 text-decoration-none me-3 fs-3" title="GitHub">
               <i className="fab fa-github"></i>
             </a>
-            <a href="https://www.linkedin.com/in/fandy-wahyu-hanzura-0b4171369/" target="_blank" className="text-white-50 text-decoration-none fs-3">
+            <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-white-50 text-decoration-none fs-3" title="LinkedIn">
               <i className="fab fa-linkedin"></i>
             </a>
           </div>
           <div className="mt-4">
             <p className="mt-4 col-lg-8 mx-auto">Wanna see my Curiculum Vitae</p>
             <div className="mt-3">
-              <a href="/cv.jpg" target="_blank">
-                <span className="badge badge-custom fs-5">Click Here !</span>
+              <a href={profile.cv_file} target="_blank" rel="noreferrer">
+                <span className="badge badge-custom fs-5 rounded-pill px-4 py-2">Click Here !</span>
               </a>
             </div>
           </div>
@@ -63,40 +74,8 @@ export default async function Home() {
 
         <hr className="text-white-50 my-5" />
 
-        {/* DIGITAL CLOCK */}
-        <div className="container-fluid">
-          <h1 className="h2 mb-4 fw-bold">Time:</h1>
-          <div className="digital-clock-container">
-            <span id="clock-hours">00</span>
-            <span className="clock-separator">:</span>
-            <span id="clock-minutes">00</span>
-            <span className="clock-separator">:</span>
-            <span id="clock-seconds">00</span>
-          </div>
-        </div>
-
-        <hr className="text-white-50 my-5" />
-
-        {/* PRAYER TIME */}
-        <div className="container-fluid">
-          <h1 className="h2 mb-4 fw-bold">Prayer Time:</h1>
-          <div className="prayer-schedule-container">
-            <div className="header">
-              <div className="date-location">
-                <span id="location">Malang</span>, <span id="current-date">--</span>
-              </div>
-            </div>
-            <div className="prayer-times">
-              <div className="prayer-time-item"><div className="prayer-name">Subuh</div><div className="time" id="fajr-time">--:--</div></div>
-              <div className="prayer-time-item"><div className="prayer-name">Dzuhur</div><div className="time" id="dhuhr-time">--:--</div></div>
-              <div className="prayer-time-item"><div className="prayer-name">Ashar</div><div className="time" id="asr-time">--:--</div></div>
-              <div className="prayer-time-item"><div className="prayer-name">Maghrib</div><div className="time" id="maghrib-time">--:--</div></div>
-              <div className="prayer-time-item"><div className="prayer-name">Isha</div><div className="time" id="isha-time">--:--</div></div>
-            </div>
-          </div>
-          <br />
-          <p>* Might not accurated just reminder</p>
-        </div>
+        {/* JAM DIGITAL & JADWAL SHOLAT OTOMATIS */}
+        <PrayerAndClock />
 
         <hr className="text-white-50 my-5" />
 
@@ -112,7 +91,6 @@ export default async function Home() {
               return (
                 <div key={proj.id} className="col-lg-4 col-md-6 mb-4">
                   <div className="card project-card text-white h-100 position-relative">
-                    {/* TOMBOL DELETE JIKA ADMIN LOGIN */}
                     {isAdmin && <DeleteProjectBtn id={proj.id} />}
 
                     <div className="card-body">
@@ -122,7 +100,7 @@ export default async function Home() {
                       </p>
                       <div className="mt-3">
                         {tagsArray.map((tag: string, idx: number) => (
-                          <span key={idx} className="badge badge-custom me-1 mb-1">
+                          <span key={idx} className="badge badge-custom me-1 mb-1 rounded-pill px-3 py-1">
                             {tag}
                           </span>
                         ))}
@@ -135,7 +113,7 @@ export default async function Home() {
                           href={link.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="btn btn-outline-light btn-sm"
+                          className="btn btn-outline-light btn-sm rounded-pill px-3"
                         >
                           {link.label} <i className="fas fa-arrow-right ms-1"></i>
                         </a>
@@ -150,49 +128,10 @@ export default async function Home() {
 
         <header className="text-center py-5">
           <p className="mt-4 col-lg-8 mx-auto">
-            &copy; 2026 Fandy Wahyu Hanzura. All Rights Reserved.
+            &copy; 2026 {profile.name}. All Rights Reserved.
           </p>
         </header>
       </div>
-
-      <Script id="clock-and-prayer" strategy="lazyOnload">{`
-        function updateClock() {
-            const now = new Date();
-            let hours = now.getHours();
-            let minutes = now.getMinutes();
-            let seconds = now.getSeconds();
-            hours = hours < 10 ? '0' + hours : hours;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
-            if (document.getElementById('clock-hours')) {
-                document.getElementById('clock-hours').textContent = hours;
-                document.getElementById('clock-minutes').textContent = minutes;
-                document.getElementById('clock-seconds').textContent = seconds;
-            }
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        document.addEventListener('DOMContentLoaded', function () {
-            if (typeof prayTimes !== 'undefined') {
-                const latitude = -7.9839;
-                const longitude = 112.6214;
-                const timeZone = 7;
-                prayTimes.setMethod('Kemenag');
-                const today = new Date();
-                const times = prayTimes.getTimes(today, [latitude, longitude], timeZone);
-                const options = { day: 'numeric', month: 'long', year: 'numeric' };
-                if (document.getElementById('current-date')) {
-                    document.getElementById('current-date').textContent = today.toLocaleDateString('en-GB', options);
-                    document.getElementById('fajr-time').textContent = times.fajr;
-                    document.getElementById('dhuhr-time').textContent = times.dhuhr;
-                    document.getElementById('asr-time').textContent = times.asr;
-                    document.getElementById('maghrib-time').textContent = times.maghrib;
-                    document.getElementById('isha-time').textContent = times.isha;
-                }
-            }
-        });
-      `}</Script>
     </main>
   );
 }
