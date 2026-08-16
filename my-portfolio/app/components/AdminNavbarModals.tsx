@@ -40,12 +40,15 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
   const [profEmail, setProfEmail] = useState(profileData?.email || "");
   const [profGithub, setProfGithub] = useState(profileData?.github_url || "");
   const [profLinkedin, setProfLinkedin] = useState(profileData?.linkedin_url || "");
+  
+  // File & URL State
   const [profImgFile, setProfImgFile] = useState<File | null>(null);
   const [profCvFile, setProfCvFile] = useState<File | null>(null);
+  const [currentImgUrl, setCurrentImgUrl] = useState(profileData?.profile_img || "/profile.jpg");
+  const [currentCvUrl, setCurrentCvUrl] = useState(profileData?.cv_file || "/cv.jpg");
   const [previewImg, setPreviewImg] = useState<string>(profileData?.profile_img || "/profile.jpg");
   const [profLoading, setProfLoading] = useState(false);
 
-  // Sinkronisasi data saat profileData dari server berubah
   useEffect(() => {
     if (profileData) {
       setProfName(profileData.name || "");
@@ -54,6 +57,8 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
       setProfEmail(profileData.email || "");
       setProfGithub(profileData.github_url || "");
       setProfLinkedin(profileData.linkedin_url || "");
+      setCurrentImgUrl(profileData.profile_img || "/profile.jpg");
+      setCurrentCvUrl(profileData.cv_file || "/cv.jpg");
       setPreviewImg(profileData.profile_img || "/profile.jpg");
     }
   }, [profileData]);
@@ -142,7 +147,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         const modalEl = document.getElementById("loginModal");
         if (modalEl) (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
         setUsername("");
@@ -150,7 +155,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
         DarkSwal.fire({ icon: "success", title: "Login Berhasil", timer: 1500, showConfirmButton: false });
         router.refresh();
       } else {
-        DarkSwal.fire({ icon: "error", title: "Gagal", text: data.message });
+        DarkSwal.fire({ icon: "error", title: "Gagal", text: data.message || "Username atau password salah" });
       }
     } finally {
       setAuthLoading(false);
@@ -174,38 +179,80 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
     }
   };
 
-  // Profile Submit Handler
+  // Submit Profile dengan Upload Vercel Blob
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfLoading(true);
 
     try {
-      const fd = new FormData();
-      fd.append("name", profName);
-      fd.append("role_title", profRole);
-      fd.append("bio", profBio);
-      fd.append("email", profEmail);
-      fd.append("github_url", profGithub);
-      fd.append("linkedin_url", profLinkedin);
-      if (profImgFile) fd.append("profile_img_file", profImgFile);
-      if (profCvFile) fd.append("cv_file_obj", profCvFile);
+      let finalImgUrl = currentImgUrl;
+      let finalCvUrl = currentCvUrl;
 
+      // 1. Upload Foto Profil ke Vercel Blob jika ada file baru dipilih
+      if (profImgFile) {
+        const cleanFileName = `profile_${Date.now()}_${profImgFile.name.replace(/\s+/g, "_")}`;
+        const resUpload = await fetch(`/api/upload?filename=${cleanFileName}`, {
+          method: "POST",
+          body: profImgFile,
+        });
+        if (!resUpload.ok) throw new Error("Gagal mengupload foto ke Blob Storage");
+        const blobData = await resUpload.json();
+        finalImgUrl = blobData.url;
+      }
+
+      // 2. Upload File CV ke Vercel Blob jika ada file baru dipilih
+      if (profCvFile) {
+        const cleanCvName = `cv_${Date.now()}_${profCvFile.name.replace(/\s+/g, "_")}`;
+        const resUploadCv = await fetch(`/api/upload?filename=${cleanCvName}`, {
+          method: "POST",
+          body: profCvFile,
+        });
+        if (!resUploadCv.ok) throw new Error("Gagal mengupload file CV ke Blob Storage");
+        const blobCvData = await resUploadCv.json();
+        finalCvUrl = blobCvData.url;
+      }
+
+      // 3. Simpan URL Blob ke Database TiDB
       const res = await fetch("/api/profile", {
         method: "PUT",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profName,
+          role_title: profRole,
+          bio: profBio,
+          email: profEmail,
+          github_url: profGithub,
+          linkedin_url: profLinkedin,
+          profile_img: finalImgUrl,
+          cv_file: finalCvUrl,
+        }),
       });
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok) {
         const modalEl = document.getElementById("editProfileModal");
         if (modalEl) (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
-        DarkSwal.fire({ icon: "success", title: "Profile Diperbarui!", timer: 1500, showConfirmButton: false });
+        setProfImgFile(null);
+        setProfCvFile(null);
+        setCurrentImgUrl(finalImgUrl);
+        setCurrentCvUrl(finalCvUrl);
+        DarkSwal.fire({
+          icon: "success",
+          title: "Profile Diperbarui!",
+          text: data.message || "Data profile berhasil disimpan",
+          timer: 1500,
+          showConfirmButton: false,
+        });
         router.refresh();
       } else {
-        DarkSwal.fire({ icon: "error", title: "Gagal Update", text: data.error || data.message });
+        DarkSwal.fire({
+          icon: "error",
+          title: "Gagal Update",
+          text: data.error || data.message || "Terjadi kesalahan",
+        });
       }
-    } catch {
-      DarkSwal.fire({ icon: "error", title: "Error", text: "Terjadi kesalahan jaringan." });
+    } catch (err: any) {
+      DarkSwal.fire({ icon: "error", title: "Error", text: err.message || "Terjadi kesalahan." });
     } finally {
       setProfLoading(false);
     }
@@ -242,7 +289,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
           title: "Berhasil!",
           text: data.message || "Project berhasil ditambahkan",
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
         fetchTags();
         router.refresh();
@@ -250,7 +297,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
         DarkSwal.fire({
           icon: "error",
           title: "Gagal",
-          text: data.error || data.message || "Gagal menambahkan project"
+          text: data.error || data.message || "Gagal menambahkan project",
         });
       }
     } catch {
@@ -343,7 +390,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
         </div>
       </div>
 
-      {/* MODAL 2: EDIT PROFILE / ABOUT ME (FOOTER STATIC DI BAWAH) */}
+      {/* MODAL 2: EDIT PROFILE / ABOUT ME */}
       <div className="modal fade" id="editProfileModal" tabIndex={-1} aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered modal-lg">
           <div
@@ -366,6 +413,9 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
                     alt="Preview"
                     className="img-fluid rounded-circle border border-2 border-secondary"
                     style={{ width: "110px", height: "110px", objectFit: "cover" }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/profile.jpg";
+                    }}
                   />
                   <div className="small text-white-50 mt-1">Foto Profil Aktif</div>
                 </div>
@@ -439,7 +489,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
 
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label className="form-label">Ganti Foto Profil (Opsional)</label>
+                    <label className="form-label">Ganti Foto Profil (Upload File)</label>
                     <input
                       type="file"
                       accept="image/*"
@@ -452,24 +502,27 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
                     />
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label className="form-label">Ganti File CV (Opsional)</label>
+                    <label className="form-label">Ganti File CV (Upload File)</label>
                     <input
                       type="file"
                       accept="image/*,.pdf"
                       className="form-control bg-secondary text-white border-dark rounded-3"
-                      onChange={(e) => setProfCvFile(e.target.files ? e.target.files[0] : null)}
+                      onChange={(e) => {
+                        const file = e.target.files ? e.target.files[0] : null;
+                        setProfCvFile(file);
+                      }}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* FOOTER STATIC SELALU KELIHATAN DI BAWAH */}
+              {/* FOOTER STATIC DI BAWAH */}
               <div className="modal-footer border-secondary flex-shrink-0 bg-dark">
                 <button type="button" className="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
                   Batal
                 </button>
                 <button type="submit" className="btn btn-warning rounded-pill px-4" disabled={profLoading}>
-                  {profLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                  {profLoading ? "Mengupload & Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </form>
@@ -618,7 +671,7 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
                 </div>
               </div>
 
-              {/* FOOTER STATIC SELALU KELIHATAN DI BAWAH */}
+              {/* FOOTER STATIC DI BAWAH */}
               <div className="modal-footer border-secondary flex-shrink-0 bg-dark">
                 <button type="button" className="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
                   Tutup

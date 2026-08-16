@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@vercel/blob": "^2.8.0",
     "sweetalert2": "^11.26.25"
   }
 }
