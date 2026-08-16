@@ -229,19 +229,32 @@ export default function AdminNavbarModals({ isAdmin, profileData }: AdminNavbarM
         body: JSON.stringify({ title, description, tags: selectedTags.join(", "), links }),
       });
       const data = await res.json();
-      if (data.success) {
+
+      if (res.ok) {
         const modalEl = document.getElementById("adminProjectModal");
         if (modalEl) (window as any).bootstrap?.Modal.getInstance(modalEl)?.hide();
         setTitle("");
         setDescription("");
         setSelectedTags([]);
         setLinks([{ label: "View Project", url: "" }]);
-        DarkSwal.fire({ icon: "success", title: "Berhasil disimpan!", timer: 1500, showConfirmButton: false });
+        DarkSwal.fire({
+          icon: "success",
+          title: "Berhasil!",
+          text: data.message || "Project berhasil ditambahkan",
+          timer: 1500,
+          showConfirmButton: false
+        });
         fetchTags();
         router.refresh();
       } else {
-        DarkSwal.fire({ icon: "error", title: "Gagal", text: data.message });
+        DarkSwal.fire({
+          icon: "error",
+          title: "Gagal",
+          text: data.error || data.message || "Gagal menambahkan project"
+        });
       }
+    } catch {
+      DarkSwal.fire({ icon: "error", title: "Error", text: "Terjadi kesalahan jaringan." });
     } finally {
       setProjLoading(false);
     }

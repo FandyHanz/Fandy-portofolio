@@ -58,18 +58,21 @@ export default function ProjectCardActions({ project }: { project: ProjectData }
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`/api/projects/${project.id}`, {
+      // Gunakan query params ?id=... (pasti mengarah ke /api/projects)
+      const res = await fetch(`/api/projects?id=${project.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, tags, links }),
       });
+
+      const data = await res.json();
 
       if (res.ok) {
         setShowEditModal(false);
         Swal.fire({
           icon: "success",
           title: "Berhasil!",
-          text: "Project berhasil diperbarui.",
+          text: data.message || "Project berhasil diperbarui.",
           background: "#212529",
           color: "#fff",
           confirmButtonColor: "#ffc107",
@@ -78,11 +81,10 @@ export default function ProjectCardActions({ project }: { project: ProjectData }
         });
         router.refresh();
       } else {
-        const err = await res.json();
         Swal.fire({
           icon: "error",
           title: "Gagal Update",
-          text: err.error || "Terjadi kesalahan",
+          text: data.error || "Terjadi kesalahan",
           background: "#212529",
           color: "#fff",
         });
@@ -99,7 +101,7 @@ export default function ProjectCardActions({ project }: { project: ProjectData }
       setLoading(false);
     }
   };
-
+  
   const handleDelete = async () => {
     const result = await Swal.fire({
       title: "Hapus Project?",

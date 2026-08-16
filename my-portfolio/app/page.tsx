@@ -24,7 +24,7 @@ export default async function Home() {
   };
   // 2. Tarik Data Projects
   const [projects]: any = await db.query(
-    "SELECT * FROM projects ORDER BY created_at DESC"
+    "SELECT * FROM projects ORDER BY created_at ASC"
   );
   const [links]: any = await db.query("SELECT * FROM project_links");
 
